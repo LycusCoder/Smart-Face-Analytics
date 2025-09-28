@@ -58,42 +58,56 @@ class FaceAnalyzer:
             
             # Age estimation model - Using DEX (Deep EXpectation) approach
             logger.info("Loading age estimation model...")
-            self.age_model = AutoModelForImageClassification.from_pretrained(
-                "nateraw/vit-age-classifier"
-            )
-            self.age_processor = AutoProcessor.from_pretrained(
-                "nateraw/vit-age-classifier"
-            )
+            try:
+                self.age_model = AutoModelForImageClassification.from_pretrained(
+                    "nateraw/vit-age-classifier"
+                )
+                self.age_processor = AutoProcessor.from_pretrained(
+                    "nateraw/vit-age-classifier"
+                )
+                logger.info("Age model loaded successfully!")
+            except Exception as e:
+                logger.warning(f"Failed to load age model: {e}")
             
-            # Emotion recognition model - FER2013 based
+            # Emotion recognition model - Using a working vision model
             logger.info("Loading emotion recognition model...")
-            self.emotion_classifier = pipeline(
-                "image-classification",
-                model="j-hartmann/emotion-english-distilroberta-base",
-                device=0 if torch.cuda.is_available() else -1
-            )
+            try:
+                self.emotion_model = pipeline(
+                    "image-classification",
+                    model="trpakov/vit-face-expression",
+                    device=0 if torch.cuda.is_available() else -1
+                )
+                logger.info("Emotion model loaded successfully!")
+            except Exception as e:
+                logger.warning(f"Failed to load emotion model: {e}")
+                try:
+                    # Fallback to another emotion model
+                    self.emotion_model = pipeline(
+                        "image-classification", 
+                        model="j-hartmann/emotion-english-distilroberta-base"
+                    )
+                    logger.info("Fallback emotion model loaded!")
+                except Exception as e2:
+                    logger.warning(f"Fallback emotion model also failed: {e2}")
             
-            # Race/ethnicity classification - FairFace model
+            # Race/ethnicity classification 
             logger.info("Loading race classification model...")
-            self.race_model = AutoModelForImageClassification.from_pretrained(
-                "rizvandwiki/gender-classification"
-            )
-            self.race_processor = AutoProcessor.from_pretrained(
-                "rizvandwiki/gender-classification"
-            )
+            try:
+                self.race_model = AutoModelForImageClassification.from_pretrained(
+                    "rizvandwiki/gender-classification"
+                )
+                self.race_processor = AutoProcessor.from_pretrained(
+                    "rizvandwiki/gender-classification"
+                )
+                logger.info("Race model loaded successfully!")
+            except Exception as e:
+                logger.warning(f"Failed to load race model: {e}")
             
-            # Alternative emotion model using HuggingFace
-            self.emotion_model = pipeline(
-                "image-classification",
-                model="trpakov/vit-face-expression"
-            )
-            
-            logger.info("All models loaded successfully!")
+            logger.info("Model loading completed!")
             
         except Exception as e:
-            logger.error(f"Error loading models: {e}")
-            # Fallback to basic models if advanced ones fail
-            self._load_fallback_models()
+            logger.error(f"Error in model loading process: {e}")
+            # Continue with available models
     
     def _load_fallback_models(self):
         """Load simpler models as fallback"""
