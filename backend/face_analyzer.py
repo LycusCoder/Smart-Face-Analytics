@@ -111,14 +111,9 @@ class FaceAnalyzer:
     
     def _load_fallback_models(self):
         """Load simpler models as fallback"""
-        logger.info("Loading fallback models...")
-        try:
-            self.emotion_model = pipeline(
-                "image-classification",
-                model="j-hartmann/emotion-english-distilroberta-base"
-            )
-        except Exception as e:
-            logger.error(f"Failed to load fallback models: {e}")
+        logger.info("Using fallback implementations...")
+        # Use MediaPipe and OpenCV-based analysis as fallback
+        logger.info("Fallback models ready (MediaPipe + OpenCV)")
     
     def detect_faces(self, image: np.ndarray) -> List[Dict]:
         """Detect faces using MediaPipe"""
